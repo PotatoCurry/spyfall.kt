@@ -18,7 +18,7 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    implementation("com.github.kwebio:kweb-core:0.5.10")
+    implementation("com.github.kwebio:kweb-core:0.5.11")
     implementation("org.slf4j:slf4j-simple:1.7.30")
     implementation("com.sksamuel.hoplite:hoplite-yaml:1.1.3")
     implementation("com.soywiz.korlibs.klock:klock-jvm:1.8.5")
