@@ -91,43 +91,48 @@ fun main() {
                         }
                         path("/join/{code}") { params ->
                             val code = params.getValue("code").value
-                            val game = toVar(games, code) // TODO: Check if game exists
-                            h2(fomantic.ui.header).text(game.map(SpyfallState.Game::title))
-                            if (game.value.state == SpyfallState.GameState.INACTIVE) {
-                                val state = game.map(SpyfallState.Game::state)
-                                val joinDiv = div(fomantic.ui.action.input)
-                                val inProgressElement = h3()
-                                joinDiv.new {
-                                    val nameInput = input(InputType.text, placeholder = "Username")
-                                    val nameText = KVar("")
-                                    nameInput.value = nameText
-                                    button(fomantic.ui.button).apply {
-                                        text("Join Game")
-                                        on.click {
-                                            val name = nameText.value
-                                            val user = createUser(name, code)
-                                            state.addListener { _, _ ->
-                                                path.value = "/game/$code/${user.uid}"
+                            val game = games[code]
+                            if (game == null) {
+                                h1().text("Invalid game code")
+                            } else {
+                                val gameVar = toVar(games, code)
+                                h2(fomantic.ui.header).text(gameVar.map(SpyfallState.Game::title))
+                                if (game.state == SpyfallState.GameState.INACTIVE) {
+                                    val state = gameVar.map(SpyfallState.Game::state)
+                                    val joinDiv = div(fomantic.ui.action.input)
+                                    val inProgressElement = h3()
+                                    joinDiv.new {
+                                        val nameInput = input(InputType.text, placeholder = "Username")
+                                        val nameText = KVar("")
+                                        nameInput.value = nameText
+                                        button(fomantic.ui.button).apply {
+                                            text("Join Game")
+                                            on.click {
+                                                val name = nameText.value
+                                                val user = createUser(name, code)
+                                                state.addListener { _, _ ->
+                                                    path.value = "/game/$code/${user.uid}"
+                                                }
                                             }
                                         }
                                     }
-                                }
-                                val startButton = button(fomantic.ui.primary.button).apply {
-                                    text("Start Game") // gamepad
-                                    on.click {
-                                        game.value = game.value.copy(state = SpyfallState.GameState.ACTIVE)
+                                    val startButton = button(fomantic.ui.primary.button).apply {
+                                        text("Start Game") // gamepad
+                                        on.click {
+                                            gameVar.value = gameVar.value.copy(state = SpyfallState.GameState.ACTIVE)
+                                        }
                                     }
+                                    state.addListener { _, _ ->
+                                        joinDiv.delete()
+                                        startButton.delete()
+                                        inProgressElement.text("Game in progress")
+                                    }
+                                } else {
+                                    h3().text("Game in progress")
                                 }
-                                state.addListener { _, _ ->
-                                    joinDiv.delete()
-                                    startButton.delete()
-                                    inProgressElement.text("Game in progress")
-                                }
-                            } else {
-                                h3().text("Game in progress")
+                                div(fomantic.ui.hidden.divider)
+                                renderUserList(game)
                             }
-                            div(fomantic.ui.hidden.divider)
-                            renderUserList(game.value)
                         }
                         path("/game/{code}/{user}") { params ->
                             val code = params.getValue("code").value
