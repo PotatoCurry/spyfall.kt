@@ -11,6 +11,7 @@ import io.github.potatocurry.spyfallkt.SpyfallState.locations
 import io.github.potatocurry.spyfallkt.SpyfallState.users
 import io.github.potatocurry.spyfallkt.SpyfallState.usersByGame
 import io.kweb.Kweb
+import io.kweb.dom.element.creation.ElementCreator
 import io.kweb.dom.element.creation.tags.*
 import io.kweb.dom.element.new
 import io.kweb.dom.title
@@ -91,45 +92,42 @@ fun main() {
                         path("/join/{code}") { params ->
                             val code = params.getValue("code").value
                             val game = toVar(games, code) // TODO: Check if game exists
-                            val users = usersByGame(game.value)
                             h2(fomantic.ui.header).text(game.map(SpyfallState.Game::title))
-                            div(fomantic.ui.action.input).new {
-                                val nameInput = input(InputType.text, placeholder = "Username")
-
-                                val nameText = KVar("")
-                                nameInput.value = nameText
-                                button(fomantic.ui.button).apply {
-                                    text("Join Game") // pen
-                                    on.click {
-                                        val name = nameText.value
-                                        val user = createUser(name, code)
-                                        game.map(SpyfallState.Game::state).addListener { _, state ->
-                                            if (state == SpyfallState.GameState.ACTIVE)
-                                                path.value = "/game/$code/${user.uid}" // TODO: Add 3-2-1 countdown
-                                        }
-                                    }
-                                }
-                            }
-                            div(fomantic.ui.hidden.divider)
-                            div(fomantic.ui.centered.grid).new {
-                                div(fomantic.four.wide.column).new {
-                                    div(fomantic.ui.divided.list).new {
-                                        renderEach(users) { user ->
-                                            div(fomantic.ui.item).new {
-                                                i(fomantic.user.icon)
-                                                div(fomantic.content).text(user.map(SpyfallState.User::name))
+                            if (game.value.state == SpyfallState.GameState.INACTIVE) {
+                                val state = game.map(SpyfallState.Game::state)
+                                val joinDiv = div(fomantic.ui.action.input)
+                                val inProgressElement = h3()
+                                joinDiv.new {
+                                    val nameInput = input(InputType.text, placeholder = "Username")
+                                    val nameText = KVar("")
+                                    nameInput.value = nameText
+                                    button(fomantic.ui.button).apply {
+                                        text("Join Game")
+                                        on.click {
+                                            val name = nameText.value
+                                            val user = createUser(name, code)
+                                            state.addListener { _, _ ->
+                                                path.value = "/game/$code/${user.uid}"
                                             }
                                         }
                                     }
                                 }
+                                val startButton = button(fomantic.ui.primary.button).apply {
+                                    text("Start Game") // gamepad
+                                    on.click {
+                                        game.value = game.value.copy(state = SpyfallState.GameState.ACTIVE)
+                                    }
+                                }
+                                state.addListener { _, _ ->
+                                    joinDiv.delete()
+                                    startButton.delete()
+                                    inProgressElement.text("Game in progress")
+                                }
+                            } else {
+                                h3().text("Game in progress")
                             }
                             div(fomantic.ui.hidden.divider)
-                            button(fomantic.ui.primary.button).apply {
-                                text("Start Game") // gamepad
-                                on.click {
-                                    game.value = game.value.copy(state = SpyfallState.GameState.ACTIVE)
-                                }
-                            }
+                            renderUserList(game.value)
                         }
                         path("/game/{code}/{user}") { params ->
                             val code = params.getValue("code").value
@@ -140,7 +138,6 @@ fun main() {
                                 p().text("User not found")
                             } else {
                                 val spy = user == game.value.spy
-                                val users = usersByGame(game.value)
                                 if (spy)
                                     user.role = "Spy"
                                 else
@@ -152,23 +149,12 @@ fun main() {
 
                                 }
                                 p().text(user.name)
-                                p().text(user.role) // TODO: Conceal when not hovered over
+                                val roleElement = p().text(user.role) // TODO: Conceal when not hovered over
                                 val locationElement = if (spy)
                                     p().text("Unknown")
                                 else
                                     p().text(game.value.location.name)
-                                div(fomantic.ui.centered.grid).new {
-                                    div(fomantic.four.wide.column).new {
-                                        div(fomantic.ui.divided.list).new {
-                                            renderEach(users) { user ->
-                                                div(fomantic.ui.item).new {
-                                                    i(fomantic.user.icon)
-                                                    div(fomantic.content).text(user.map(SpyfallState.User::name))
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                                renderUserList(game.value)
                                 div(fomantic.ui.grid).new {
                                     locations.forEach { location ->
                                         div(fomantic.four.wide.column).new {
@@ -189,6 +175,22 @@ fun main() {
                                 }
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun ElementCreator<*>.renderUserList(game: SpyfallState.Game) {
+    val users = usersByGame(game)
+    div(fomantic.ui.centered.grid).new {
+        div(fomantic.four.wide.column).new {
+            div(fomantic.ui.divided.list).new {
+                renderEach(users) { user ->
+                    div(fomantic.ui.item).new {
+                        i(fomantic.user.icon)
+                        div(fomantic.content).text(user.map(SpyfallState.User::name))
                     }
                 }
             }
