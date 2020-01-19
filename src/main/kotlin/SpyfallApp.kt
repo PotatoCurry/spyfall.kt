@@ -119,7 +119,8 @@ fun main() {
                                     val startButton = button(fomantic.ui.primary.button).apply {
                                         text("Start Game") // gamepad
                                         on.click {
-                                            gameVar.value = gameVar.value.copy(state = SpyfallState.GameState.ACTIVE)
+                                            val spy = usersByGame(game).entries.random()
+                                            gameVar.value = gameVar.value.copy(state = SpyfallState.GameState.ACTIVE, spy = spy) // This is fucking rarted, REEEEE
                                         }
                                     }
                                     state.addListener { _, _ ->

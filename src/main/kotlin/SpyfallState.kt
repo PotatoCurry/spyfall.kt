@@ -14,10 +14,10 @@ object SpyfallState {
         val title: String,
         val code: String = generateCode(),
         val location: Location = locations.random(),
-        val state: GameState = GameState.INACTIVE
+        var state: GameState = GameState.INACTIVE,
+        val spy: User? = null
     ) {
         private val roleIterator: Iterator<String> = location.roles.iterator()
-        val spy by lazy { usersByGame(this).entries.random() }
 
         fun nextRole(): String {
             return roleIterator.next()
