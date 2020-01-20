@@ -101,6 +101,9 @@ fun main() {
                                     val state = gameVar.map(SpyfallState.Game::state)
                                     val joinDiv = div(fomantic.ui.action.input)
                                     val inProgressElement = h3()
+                                    val startButton = button(fomantic.ui.primary.button).apply {
+                                        disable()
+                                    }
                                     joinDiv.new {
                                         val nameInput = input(InputType.text, placeholder = "Username")
                                         val nameText = KVar("")
@@ -114,18 +117,26 @@ fun main() {
                                                     path.value = "/game/$code/${user.uid}"
                                                 }
                                             }
+                                            onImmediate.click {
+                                                joinDiv.delete()
+                                                startButton.enable()
+                                            }
                                         }
                                     }
-                                    val startButton = button(fomantic.ui.primary.button).apply {
+                                    startButton.apply {
                                         text("Start Game") // gamepad
                                         on.click {
                                             val spy = usersByGame(game).entries.random()
-                                            gameVar.value = gameVar.value.copy(state = SpyfallState.GameState.ACTIVE, spy = spy) // This is fucking rarted, REEEEE
+                                            gameVar.value = gameVar.value.copy(
+                                                    state = SpyfallState.GameState.ACTIVE,
+                                                    spy = spy
+                                            ) // This is fucking rarted, REEEEE
+                                            println("spy was ${spy.name}")
                                         }
                                     }
                                     state.addListener { _, _ ->
-                                        joinDiv.delete()
-                                        startButton.delete()
+                                        joinDiv.deleteIfExists()
+                                        startButton.deleteIfExists()
                                         inProgressElement.text("Game in progress")
                                     }
                                 } else {
