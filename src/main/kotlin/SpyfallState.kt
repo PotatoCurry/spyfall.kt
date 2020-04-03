@@ -17,11 +17,7 @@ object SpyfallState {
         var state: GameState = GameState.INACTIVE,
         val spy: User? = null
     ) {
-        private val roleIterator: Iterator<String> = location.roles.iterator()
-
-        fun nextRole(): String {
-            return roleIterator.next()
-        }
+        fun randomRole() = location.roles.random()
     }
 
     enum class GameState {

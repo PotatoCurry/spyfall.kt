@@ -158,7 +158,7 @@ fun main() {
                                 if (spy)
                                     user.role = "Spy"
                                 else
-                                    user.role = game.value.nextRole()
+                                    user.role = game.value.randomRole()
                                 val timer = KVar(10.minutes)
 
                                 p().text(timer.map { it.toTimeString(2) })
